@@ -742,6 +742,8 @@ class Main_Window(Gtk.Window):
         self.alloacting_tasks_thread = threading.Thread(target=self.allocate_tasks, daemon=True, args=(self.hash_to_be_calculated, self.hash_type_selected, self.hash_tab_radio_button_1.get_active(), charset, size))
         self.alloacting_tasks_thread.start()
         self.alloacting_tasks_thread.join()
+        self.track_progress = threading.Thread(target=self.track_progress_function, daemon=True, args=())
+        self.track_progress.start()
         #self.socket_check_thread = threading.Thread(target=self.socket_alive_check, daemon=True, args=())
         #self.socket_check_thread.start()
         
@@ -749,6 +751,48 @@ class Main_Window(Gtk.Window):
     def allocate_tasks(self, hash_to_be_calculated, hash_type_selected, wordlist_type, charset, size):
         for i in range(len(self.global_slave_connections)):
             self.global_slave_connections[i][0].send((str(self.hash_to_be_calculated)+ " " + str(self.hash_type_selected) + " " + str(self.hash_tab_radio_button_1.get_active()) + " " + str(charset) + " " + str(size)+" "+str(i)+" "+str(len(self.global_slave_connections))).encode())
+
+    def track_progress_function(self):
+        i=0
+        current=''
+        Full = []
+        self.global_master_socket.setblocking(True)
+        while True:
+            i = (i+1)%len(self.global_slave_connections)
+            current = str((self.global_slave_connections[i][0].recv(1024)).decode()).strip()
+            current = current.split()
+            Full = Full + current
+            print(current)
+            if len(current)>=2:
+                print("i am not comming here")
+                if current.count("Calculated")>0:                    
+                    current.reverse()
+                    index = current.index("Calculated")
+                    statement = "self.statistics_tab_line_"+str(i+1)+"_label_4.set_label(\""+current[index+1]+" "+current[index]+"\")"
+                    print("\nI am updating " + str(i+1) + " to " + current[index+1]+" "+current[index])
+                    exec(statement)
+
+                else:
+                    continue 
+            
+            if Full.count("done") == len(self.global_slave_connections):
+                break
+            #print(str(self.global_slave_connections[i][1]) + " has " + current)
+            #
+        print(Full)
+        self.global_master_socket.setblocking(False)
+        for i in self.global_slave_connections:
+            try:
+                l = str(i[0].recv(2048).decode()).split()
+                Full = Full+l
+            except:
+                pass
+        if Full.count('hash'):
+            self.global_buffer.insert(self.iter, "\n\n"+str(Full[Full.index('hash')-3]) + " and its hash " +str(Full[Full.index('hash')+1]))
+            self.iter = self.global_buffer.get_end_iter()
+        print(Full.count("100%"))
+                    
+
 
     def socket_alive_check(self):
         i=0
@@ -780,7 +824,7 @@ class Main_Window(Gtk.Window):
                 self.global_slave_connections.append((connection, address))
                 current  = "self.statistics_tab_line_"+str(len(self.global_slave_connections))+"_label_2.set_label(\""+str(address[0]) +" ==> "+ str(address[1])+"\")"
                 current2 = "self.statistics_tab_line_"+str(len(self.global_slave_connections))+"_label_3.set_label(\"Connected\")"
-                current3 = "self.statistics_tab_line_"+str(len(self.global_slave_connections))+"_label_4.set_label(\"0% Completed,  0% CPU\")"
+                current3 = "self.statistics_tab_line_"+str(len(self.global_slave_connections))+"_label_4.set_label(\"0% Completed\")"
                 self.global_buffer.insert(self.iter, "Client " + str(address[0]) + " Connected through Port " + str(address[1]) +"\n")
                 self.iter = self.global_buffer.get_end_iter()
                 exec(current)
