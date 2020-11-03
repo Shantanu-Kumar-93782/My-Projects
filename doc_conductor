@@ -1,8 +1,0 @@
-for i  in dir(nb):
-    print("\t|")
-    print("\t|")
-    try:
-        current = "nb."+i+".__doc__()"
-        print("\t|===>\t"+str(exec(current)))
-    except:
-        continue
