@@ -12,7 +12,7 @@ How it works:-
   on respective machines. Currently total number of slaves allowed are 20. Now once you start Master.py, you have to enter ip to which slaves will contact. Now just give 
   hash you want to crack, what kind of hash it is, size of password (just guess this and try for different lengths). 
   
-  Choose type of wordlists (Note if you use predefined wordlist then that list should be present in slave's machine with name as "predefined_wordlist.txt". Once done, 
+  Choose type of wordlists (Note if you use predefined wordlist then that list should be present in slave's machine with name as "predefined_wordlist.txt"). Once done, 
   just connect the slaves to the master, you can check wehter they are connected or not in statistics tab. And then click start, after this tasks are allocated to 
   slaves, now slaves have to click start to accept the task and start working on them.
   
